@@ -1,0 +1,324 @@
+fileFormatVersion: 2
+guid: d6263a7953b18944e9fef0fb5579e584
+timeCreated: 1512058843
+licenseType: Free
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: airBnb
+    100002: airBnBBend
+    100004: airbnbType
+    100006: airbnbType1
+    100008: base
+    100010: bend2Handle
+    100012: bottom
+    100014: bottomLeft
+    100016: bottomMid
+    100018: expand
+    100020: imageBend
+    100022: images
+    100024: imageType
+    100026: origtitle
+    100028: other
+    100030: overallBend
+    100032: rule
+    100034: //RootNode
+    100036: sites
+    100038: svgMesh1
+    100040: title
+    100042: transform11
+    100044: transform7
+    100046: transform9
+    100048: typeMesh6
+    100050: usNewsTypeSmall
+    100052: v1
+    100054: v11
+    100056: v13
+    100058: v15
+    100060: v16
+    100062: v25
+    100064: v26
+    100066: v27
+    100068: v6
+    100070: v6 1
+    100072: v7
+    100074: v9
+    400000: airBnb
+    400002: airBnBBend
+    400004: airbnbType
+    400006: airbnbType1
+    400008: base
+    400010: bend2Handle
+    400012: bottom
+    400014: bottomLeft
+    400016: bottomMid
+    400018: expand
+    400020: imageBend
+    400022: images
+    400024: imageType
+    400026: origtitle
+    400028: other
+    400030: overallBend
+    400032: rule
+    400034: //RootNode
+    400036: sites
+    400038: svgMesh1
+    400040: title
+    400042: transform11
+    400044: transform7
+    400046: transform9
+    400048: typeMesh6
+    400050: usNewsTypeSmall
+    400052: v1
+    400054: v11
+    400056: v13
+    400058: v15
+    400060: v16
+    400062: v25
+    400064: v26
+    400066: v27
+    400068: v6
+    400070: v6 1
+    400072: v7
+    400074: v9
+    2300000: airbnbType
+    2300002: airbnbType1
+    2300004: base
+    2300006: bottom
+    2300008: bottomLeft
+    2300010: bottomMid
+    2300012: imageType
+    2300014: origtitle
+    2300016: rule
+    2300018: svgMesh1
+    2300020: title
+    2300022: typeMesh6
+    2300024: usNewsTypeSmall
+    2300026: v1
+    2300028: v11
+    2300030: v13
+    2300032: v15
+    2300034: v16
+    2300036: v25
+    2300038: v6
+    2300040: v7
+    2300042: v9
+    3300000: airbnbType
+    3300002: airbnbType1
+    3300004: base
+    3300006: bottom
+    3300008: bottomLeft
+    3300010: bottomMid
+    3300012: imageType
+    3300014: origtitle
+    3300016: rule
+    3300018: svgMesh1
+    3300020: title
+    3300022: typeMesh6
+    3300024: usNewsTypeSmall
+    3300026: v1
+    3300028: v11
+    3300030: v13
+    3300032: v15
+    3300034: v16
+    3300036: v25
+    3300038: v6
+    3300040: v7
+    3300042: v9
+    4300000: title
+    4300002: origtitle
+    4300004: v13
+    4300006: v9
+    4300008: v16
+    4300010: v15
+    4300012: v11
+    4300014: base
+    4300016: imageType
+    4300018: svgMesh1
+    4300020: v7
+    4300022: airbnbType
+    4300024: v1
+    4300026: typeMesh6
+    4300028: v25
+    4300030: bottom
+    4300032: bottomMid
+    4300034: usNewsTypeSmall
+    4300036: rule
+    4300038: bottomLeft
+    4300040: airbnbType1
+    4300042: v6
+    7400000: Take 001
+    9500000: //RootNode
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: complexSBG
+    second: {fileID: 2100000, guid: 08a46f4dea8c1f7429bbb942ae35cd62, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: fadeTypeM
+    second: {fileID: 2100000, guid: 0d07be6fd492cdc42ab66cc2d309d98a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: image1M
+    second: {fileID: 2100000, guid: fe05a682d408c1a4ca1ddcc97121996a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: image3M
+    second: {fileID: 2100000, guid: df966e43e3a1773439d28b07aa495e9b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: image5M
+    second: {fileID: 2100000, guid: b37e1123e5b93fb4cac197451073a208, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: image8M
+    second: {fileID: 2100000, guid: 524abb50bdbe1e94ba11049ea6d0f610, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: image9M
+    second: {fileID: 2100000, guid: fc9f59f69fe051141a43c20a49458da9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: imageSnippetBG
+    second: {fileID: 2100000, guid: 5a12e571ac3bae24faeb6d4b9a824db3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: imageText
+    second: {fileID: 2100000, guid: 2eddc475df2e33943ba5894a31a3d53b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: leftTypeRS
+    second: {fileID: 2100000, guid: ff9edfe6840a9c34a9f4a812d4f22d6e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: rsLineM
+    second: {fileID: 2100000, guid: c04e252e4c59aec47bb45e47e295be81, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: smallTypeRsMat
+    second: {fileID: 2100000, guid: a7b745e6b36d48347bf827d29349655e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: snippetBG
+    second: {fileID: 2100000, guid: 3d67362e7859b8642a546f9658515310, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: snippetLeft
+    second: {fileID: 2100000, guid: 72638e81b2d5a684aac8eac21041450c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: transparentBG
+    second: {fileID: 2100000, guid: 79d1dc7b228e6c64a83be430ff07d8d5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: typeRSMat
+    second: {fileID: 2100000, guid: e2a2b32c083957d4286a4a0a3d1fd582, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: web1M
+    second: {fileID: 2100000, guid: f816dc7e51ca4f149a5f0bb20c9030df, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: web2M
+    second: {fileID: 2100000, guid: b36b2f0a9b8029e48bb4d4a61ccf7d1b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: web3M
+    second: {fileID: 2100000, guid: c82d94268aae32f479720648f606755e, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
