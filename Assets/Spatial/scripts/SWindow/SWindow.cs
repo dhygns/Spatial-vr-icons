@@ -15,6 +15,7 @@ public class SWindow : MonoBehaviour
     //SWindow Logics
     protected delegate void UpdateLogic();
     protected UpdateLogic _updateLogic = null;
+    protected UpdateLogic _updateGrouping = null;
 
     //SWindow positions
     protected Vector3 _targetPosition;
@@ -25,8 +26,15 @@ public class SWindow : MonoBehaviour
     protected Vector3 _currentLooker;
 
     //SWindow vars
-    protected Vector3 _boxColliderSizeReleased;
-    protected Vector3 _boxColliderSizeDraged;
+    private Vector3 _boxColliderSizeReleased;
+    private Vector3 _boxColliderSizeDraged;
+
+    private Ray _ray;
+    private RaycastHit _hit;
+
+    private SWindow _groupingCoord = null;
+    private SWindow _groupingTarget = null;
+    private float _groupingTimer = 0.0f;
 
     //List of SWindows
     protected List<SWindow> _listCollidedSWindows;
@@ -35,6 +43,7 @@ public class SWindow : MonoBehaviour
     {
         //init objects
         _listCollidedSWindows = new List<SWindow>();
+        _ray = new Ray();
 
         //Position &  Looker Init
         _currentPosition = _targetPosition = transform.position;
@@ -62,28 +71,86 @@ public class SWindow : MonoBehaviour
 
     protected virtual void Update()
     {
-        if(_updateLogic != null)
+        //Update Logic Function
+        if (_updateLogic != null)
         {
             _updateLogic();
         }
 
+        //Update Grounping Function
+        UpdateGrouping();
+        if (_updateGrouping != null)
+        {
+            _updateGrouping();
+        }
+        
         _listCollidedSWindows.ForEach((SWindow sw) =>
         {
             sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
         });
     }
 
-    public void updatePosition()
+
+    public void UpdatePosition()
     {
         _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
         transform.position = _currentPosition;
     }
 
-    public void updateLooker()
+    public void UpdateLooker()
     {
         _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
     }
+
+    public void UpdateGrouping()
+    {
+        _ray.origin = transform.position;
+        _ray.direction = -transform.forward;
+
+        //Search Object For Grouping
+        if (Physics.Raycast(_ray, out _hit, 1.0f))
+        {
+            if (_hit.transform == null)
+            {
+                return;
+            }
+
+            SWindow wind = _hit.transform.GetComponent<SWindow>();
+            if (wind == null)
+            {
+                return;
+            }
+
+            if(_groupingCoord != null && _groupingCoord != wind)
+            {
+                _groupingTimer += Time.deltaTime;
+                return;
+            }
+
+            _groupingTarget = null;
+            _groupingCoord = wind;
+            _groupingTimer = 0.0f;
+        }
+        else
+        {
+            _groupingTarget = null;
+            _groupingCoord = null ;
+            _groupingTimer = 0.0f;
+        }
+
+
+        if (_groupingTimer > 1.0f)
+        {
+            _groupingTarget = _groupingCoord;
+            //ready for enable
+        }
+        else
+        {
+            //disable
+        }
+    }
+
 
     public virtual void OnClicked(Vector3 pos, Vector3 forward)
     {
@@ -96,14 +163,16 @@ public class SWindow : MonoBehaviour
         _currentLooker = transform.position + transform.forward;
         _targetLooker = pos + forward;
         
-        _updateLogic += updatePosition;
-        _updateLogic += updateLooker;
+        _updateLogic += UpdatePosition;
+        _updateLogic += UpdateLooker;
     }
 
     public virtual void OnDraged(Vector3 pos, Vector3 forward)
     {
         _targetPosition = pos;
         _targetLooker = pos + forward;
+
+        Debug.DrawLine(_ray.origin, _ray.origin + _ray.direction, Color.cyan);
     }
 
     public virtual void OnReleased(Vector3 pos, Vector3 forward)
@@ -117,6 +186,16 @@ public class SWindow : MonoBehaviour
         _listCollidedSWindows.Clear();
 
         _updateLogic = null;
+
+        if(_groupingTarget == null)
+        {
+            //disable
+        }
+        else
+        {
+            //endable
+        }
+
     }
 
     //Listeners
