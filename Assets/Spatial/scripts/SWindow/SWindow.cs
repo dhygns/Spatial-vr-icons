@@ -9,8 +9,7 @@ public class SWindow : MonoBehaviour
 
 
     //SWindow Components
-    protected BoxCollider _boxColider;
-    protected SphereCollider _sphereColider;
+    protected BoxCollider _boxCollider;
     protected Rigidbody _rigidBody;
 
     //SWindow Logics
@@ -24,6 +23,10 @@ public class SWindow : MonoBehaviour
     //SWindow lookers
     protected Vector3 _targetLooker;
     protected Vector3 _currentLooker;
+
+    //SWindow vars
+    protected Vector3 _boxColliderSizeReleased;
+    protected Vector3 _boxColliderSizeDraged;
 
     //List of SWindows
     protected List<SWindow> _listCollidedSWindows;
@@ -42,23 +45,18 @@ public class SWindow : MonoBehaviour
         {
             _rigidBody = cmpt;
 
-            cmpt.constraints = RigidbodyConstraints.FreezeAll;
+            cmpt.useGravity = false;
+            cmpt.constraints = RigidbodyConstraints.FreezeRotation;
+            cmpt.drag = 10.0f;
         });
 
         InitComponent<BoxCollider>((cmpt) =>
         {
-            _boxColider = cmpt;
+            _boxCollider = cmpt;
 
-            cmpt.isTrigger = true;
             cmpt.enabled = true;
-        });
-
-        InitComponent<SphereCollider>((cmpt) =>
-        {
-            _sphereColider = cmpt;
-
-            cmpt.isTrigger = true;
-            cmpt.enabled = false;
+            _boxColliderSizeReleased = cmpt.size;
+            _boxColliderSizeDraged = new Vector3(cmpt.size.x * 1.5f, cmpt.size.y * 1.5f, 0.1f);
         });
     }
 
@@ -71,7 +69,7 @@ public class SWindow : MonoBehaviour
 
         _listCollidedSWindows.ForEach((SWindow sw) =>
         {
-            sw.TargetPosition = sw.TargetPosition + (sw.TargetPosition - TargetPosition).normalized * 0.25f;
+            sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
         });
     }
 
@@ -89,13 +87,15 @@ public class SWindow : MonoBehaviour
 
     public virtual void OnClicked(Vector3 pos, Vector3 forward)
     {
-        _sphereColider.enabled = true;
-        _boxColider.enabled = false;
+        _boxCollider.size = _boxColliderSizeDraged;
+        _boxCollider.isTrigger = true;
 
+        _currentPosition = transform.position;
         _targetPosition = pos;
+
+        _currentLooker = transform.position + transform.forward;
         _targetLooker = pos + forward;
         
-        _updateLogic = null;
         _updateLogic += updatePosition;
         _updateLogic += updateLooker;
     }
@@ -108,8 +108,8 @@ public class SWindow : MonoBehaviour
 
     public virtual void OnReleased(Vector3 pos, Vector3 forward)
     {
-        _boxColider.enabled = true;
-        _sphereColider.enabled = false;
+        _boxCollider.size = _boxColliderSizeReleased;
+        _boxCollider.isTrigger = false;
 
         _targetPosition = pos;
         _targetLooker = transform.position + transform.forward;
@@ -117,15 +117,13 @@ public class SWindow : MonoBehaviour
         _listCollidedSWindows.Clear();
 
         _updateLogic = null;
-        _updateLogic += updatePosition;
-        //_updateLogic += updateLooker;
     }
 
     //Listeners
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!_sphereColider.enabled)
+        if(_updateLogic == null)
         {
             return;
         }

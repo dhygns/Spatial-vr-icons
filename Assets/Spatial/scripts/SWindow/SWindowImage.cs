@@ -25,14 +25,10 @@ public class SWindowImage : SWindow
     public override void OnDraged(Vector3 pos, Vector3 forward)
     {
         base.OnDraged(pos, forward);
-
     }
 
     public override void OnReleased(Vector3 pos, Vector3 forward)
     {
         base.OnReleased(pos, forward);
-
-        _updateLogic = null;
-        _updateLogic += updatePosition;
     }
 }
