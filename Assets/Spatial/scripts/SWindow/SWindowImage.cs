@@ -6,8 +6,9 @@ public class SWindowImage : SWindow
 {
 
     // Use this for initialization
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
     }
 
     // Update is called once per frame
@@ -15,7 +16,7 @@ public class SWindowImage : SWindow
     {
         base.Update();
     }
-    
+
     // 
     public override void OnClicked(Vector3 pos, Vector3 forward)
     {

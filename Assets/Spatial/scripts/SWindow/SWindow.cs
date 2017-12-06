@@ -5,7 +5,12 @@ using System;
 
 public class SWindow : MonoBehaviour
 {
-
+    //SWindow Grouping
+    private int _groupID, _memberID;
+    private bool _isReadyForGrouping;
+    private bool _isGrouping;
+    private GameObject _prefabGroup;
+    private SWindowGroup _swTmp;
 
 
     //SWindow Components
@@ -17,6 +22,10 @@ public class SWindow : MonoBehaviour
     protected UpdateLogic _updateLogic = null;
     protected UpdateLogic _updateGrouping = null;
 
+    //SWindow scale
+    protected Vector3 _targetScale;
+    protected Vector3 _currentScale;
+
     //SWindow positions
     protected Vector3 _targetPosition;
     protected Vector3 _currentPosition;
@@ -26,50 +35,86 @@ public class SWindow : MonoBehaviour
     protected Vector3 _currentLooker;
 
     //SWindow vars
-    private Vector3 _boxColliderSizeReleased;
-    private Vector3 _boxColliderSizeDraged;
+    protected Vector3 _boxColliderSizeReleased;
+    protected Vector3 _boxColliderSizeDraged;
+    protected Vector3 _boxColliderCenterReleased;
+    protected Vector3 _boxColliderCenterDraged;
 
     private Ray _ray;
     private RaycastHit _hit;
 
     private SWindow _groupingCoord = null;
-    private SWindow _groupingTarget = null;
     private float _groupingTimer = 0.0f;
 
     //List of SWindows
     protected List<SWindow> _listCollidedSWindows;
 
-    void Awake()
+    public void InitRigidBody(Rigidbody cmpt)
     {
+        _rigidBody = cmpt;
+
+        cmpt.useGravity = false;
+        cmpt.constraints = RigidbodyConstraints.FreezeRotation;
+        cmpt.drag = 10.0f;
+    }
+
+    public void InitBoxCollider(BoxCollider cmpt)
+    {
+        _boxCollider = cmpt;
+
+        cmpt.enabled = true;
+
+        _boxColliderSizeReleased = cmpt.size;
+        _boxColliderCenterReleased = cmpt.center;
+
+        _boxColliderSizeDraged = new Vector3(cmpt.size.x * 1.5f, cmpt.size.y * 1.5f, Mathf.Min(cmpt.size.y * 1.5f, 1.0f));
+        _boxColliderCenterDraged = cmpt.center;
+    }
+
+    protected virtual void Awake()
+    {
+        //Load Resources 
+        _isReadyForGrouping = false;
+        _isGrouping = false;
+
+        _prefabGroup = Resources.Load("Prefabs/Group") as GameObject;
+        _updateGrouping = UpdateCheckingGrouping;
+
         //init objects
         _listCollidedSWindows = new List<SWindow>();
         _ray = new Ray();
 
         //Position &  Looker Init
+        _updateLogic = null;
+        _updateLogic += UpdateDefaultScale;
+        _updateLogic += UpdateDefaultPosition;
+        _updateLogic += UpdateDefaultLooker;
+
+        _currentScale = _targetScale = transform.localScale;
         _currentPosition = _targetPosition = transform.position;
         _currentLooker = _targetLooker = transform.position + transform.forward;
 
         //added components
-        InitComponent<Rigidbody>((cmpt) =>
-        {
-            _rigidBody = cmpt;
+        InitComponent<Rigidbody>(InitRigidBody);
+        InitComponent<BoxCollider>(InitBoxCollider);
+    }
 
-            cmpt.useGravity = false;
-            cmpt.constraints = RigidbodyConstraints.FreezeRotation;
-            cmpt.drag = 10.0f;
-        });
+    protected virtual void Start()
+    {
 
-        InitComponent<BoxCollider>((cmpt) =>
-        {
-            _boxCollider = cmpt;
-
-            cmpt.enabled = true;
-            _boxColliderSizeReleased = cmpt.size;
-            _boxColliderSizeDraged = new Vector3(cmpt.size.x * 1.5f, cmpt.size.y * 1.5f, 0.1f);
-        });
     }
 
     protected virtual void Update()
+    {
+        Updates();
+
+        _listCollidedSWindows.ForEach((SWindow sw) =>
+        {
+            sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
+        });
+    }
+
+    public virtual void Updates()
     {
         //Update Logic Function
         if (_updateLogic != null)
@@ -78,93 +123,179 @@ public class SWindow : MonoBehaviour
         }
 
         //Update Grounping Function
-        UpdateGrouping();
         if (_updateGrouping != null)
         {
             _updateGrouping();
         }
-        
-        _listCollidedSWindows.ForEach((SWindow sw) =>
-        {
-            sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
-        });
     }
 
+    public virtual void UpdateDefaultScale()
+    {
+        _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
+        transform.localScale = _currentScale;
+    }
 
-    public void UpdatePosition()
+    public virtual void UpdateDefaultPosition()
+    {
+        //No Working, Depends on rigidbody.
+    }
+
+    public virtual void UpdateDefaultLooker()
+    {
+        //Just Looking forward
+    }
+
+    public virtual void UpdateGrapedScale()
+    {
+        _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
+        transform.localScale = _currentScale;
+    }
+
+    public virtual void UpdateGrapedPosition()
     {
         _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
         transform.position = _currentPosition;
     }
 
-    public void UpdateLooker()
+    public virtual void UpdateGrapedLooker()
     {
         _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
     }
+    
+    public virtual void UpdateGroupingScale()
+    {
 
-    public void UpdateGrouping()
+    }
+
+    public virtual void UpdateGroupingPosition()
+    {
+
+    }
+
+    public virtual void UpdateGroupingLooker()
+    {
+
+    }
+
+    public void UpdateCheckingGrouping()
+    {
+        if (_isGrouping == true) return;
+
+        _ray.origin = transform.position;
+        _ray.direction = -transform.forward;
+
+        //Search Object For Grouping
+        if (_isReadyForGrouping && Physics.Raycast(_ray, out _hit, 1.0f) && _hit.transform != null && _hit.transform.GetComponent<SWindow>().IsGrouping == false)
+        {
+            SWindow coord = _hit.transform.GetComponent<SWindow>();
+            if (coord != null && coord == _groupingCoord)
+            {
+                _groupingTimer += Time.deltaTime;
+
+                if (_groupingTimer > 1.0f)
+                {
+                    Vector3 target = (transform.position + _groupingCoord.transform.position) * 0.5f;
+                    Transform parent = GameObject.Find("_Windows").transform;
+                    GameObject go = Instantiate(_prefabGroup, target, Quaternion.identity, parent);
+
+                    _groupingTimer = 0.0f;
+
+                    go.SetActive(true);
+
+                    _swTmp = go.GetComponent<SWindowGroup>();
+
+                    _updateGrouping = UpdateCreatingGrouping;
+                }
+            }
+            else
+            {
+                _groupingCoord = coord;
+                _groupingTimer = 0.0f;
+            }
+        }
+        else
+        {
+            _groupingCoord = null;
+        }
+    }
+
+    public void UpdateCreatingGrouping()
     {
         _ray.origin = transform.position;
         _ray.direction = -transform.forward;
 
         //Search Object For Grouping
-        if (Physics.Raycast(_ray, out _hit, 1.0f))
+        if (_isReadyForGrouping)
         {
-            if (_hit.transform == null)
+            if (Physics.Raycast(_ray, out _hit, 1.0f) && _hit.transform != null && (_hit.transform.GetComponent<SWindow>() == _groupingCoord || _hit.transform.GetComponent<SWindow>() == _swTmp))
             {
                 return;
             }
-
-            SWindow wind = _hit.transform.GetComponent<SWindow>();
-            if (wind == null)
+            else
             {
+                _swTmp.Remove();
+                _swTmp = null;
+                _groupingCoord = null;
+                _updateGrouping = UpdateCheckingGrouping;
                 return;
             }
-
-            if(_groupingCoord != null && _groupingCoord != wind)
-            {
-                _groupingTimer += Time.deltaTime;
-                return;
-            }
-
-            _groupingTarget = null;
-            _groupingCoord = wind;
-            _groupingTimer = 0.0f;
         }
         else
         {
-            _groupingTarget = null;
-            _groupingCoord = null ;
-            _groupingTimer = 0.0f;
+            _swTmp.AddSWindow(this);
+            _swTmp.AddSWindow(_groupingCoord);
+            _swTmp.Setup();
+
+            //Fix & 
+            _swTmp = null;
+            _groupingCoord = null;
+            _updateGrouping = UpdateCheckingGrouping;
+            return;
         }
 
+    }
+    public void DoGrouping(Transform parent)
+    {
+        transform.parent = parent;
 
-        if (_groupingTimer > 1.0f)
-        {
-            _groupingTarget = _groupingCoord;
-            //ready for enable
-        }
-        else
-        {
-            //disable
-        }
+        _isGrouping = true;
+        _targetPosition = parent.position;
+
+        _targetLooker = parent.forward;
+
+        _updateLogic = null;
+        _updateLogic += UpdateGroupingScale;
+        _updateLogic += UpdateGroupingPosition;
+        _updateLogic += UpdateGroupingLooker;
     }
 
+    public void UnGrouping()
+    {
+        _isGrouping = false;
+
+        _updateLogic = null;
+    }
 
     public virtual void OnClicked(Vector3 pos, Vector3 forward)
     {
-        _boxCollider.size = _boxColliderSizeDraged;
-        _boxCollider.isTrigger = true;
+        _isReadyForGrouping = true;
 
         _currentPosition = transform.position;
         _targetPosition = pos;
 
         _currentLooker = transform.position + transform.forward;
         _targetLooker = pos + forward;
-        
-        _updateLogic += UpdatePosition;
-        _updateLogic += UpdateLooker;
+
+        _updateLogic = null;
+        _updateLogic += UpdateGrapedScale;
+        _updateLogic += UpdateGrapedPosition;
+        _updateLogic += UpdateGrapedLooker;
+
+        _boxCollider.size = _boxColliderSizeDraged;
+        _boxCollider.center = _boxColliderCenterDraged;
+        _boxCollider.isTrigger = true;
+
     }
 
     public virtual void OnDraged(Vector3 pos, Vector3 forward)
@@ -177,24 +308,32 @@ public class SWindow : MonoBehaviour
 
     public virtual void OnReleased(Vector3 pos, Vector3 forward)
     {
-        _boxCollider.size = _boxColliderSizeReleased;
-        _boxCollider.isTrigger = false;
+        _isReadyForGrouping = false;
 
         _targetPosition = pos;
         _targetLooker = transform.position + transform.forward;
-        
+
         _listCollidedSWindows.Clear();
 
-        _updateLogic = null;
 
-        if(_groupingTarget == null)
+        if (_isGrouping == true)
         {
-            //disable
+            _updateLogic = null;
+            _updateLogic += UpdateGroupingScale;
+            _updateLogic += UpdateGroupingPosition;
+            _updateLogic += UpdateGroupingLooker;
         }
         else
         {
-            //endable
+            _updateLogic = null;
+            _updateLogic += UpdateDefaultScale;
+            _updateLogic += UpdateDefaultPosition;
+            _updateLogic += UpdateDefaultLooker;
         }
+
+        _boxCollider.size = _boxColliderSizeReleased;
+        _boxCollider.center = _boxColliderCenterReleased;
+        _boxCollider.isTrigger = false;
 
     }
 
@@ -202,7 +341,12 @@ public class SWindow : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(_updateLogic == null)
+        if (other.transform == transform.parent)
+        {
+            return;
+        }
+
+        if (_updateLogic == null)
         {
             return;
         }
@@ -223,6 +367,11 @@ public class SWindow : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        if (other.transform == transform.parent)
+        {
+            return;
+        }
+
         if (!other.gameObject)
         {
             return;
@@ -255,7 +404,6 @@ public class SWindow : MonoBehaviour
         T cmpt = GetComponent<T>();
         if (cmpt == null)
         {
-
             cmpt = gameObject.AddComponent<T>();
         }
 
@@ -287,6 +435,34 @@ public class SWindow : MonoBehaviour
         }
     }
 
+    public Vector3 TargetScale
+    {
+        get
+        {
+            return _currentScale;
+        }
+
+        set
+        {
+            _targetScale = value;
+        }
+    }
+
+    public int ID
+    {
+        set
+        {
+            _memberID = value;
+        }
+    }
+
+    public bool IsGrouping
+    {
+        get
+        {
+            return _isGrouping;
+        }
+    }
 
 
 }
