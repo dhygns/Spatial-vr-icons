@@ -20,11 +20,11 @@ public class SWindowGroup : SWindow
         _boxCollider.isTrigger = true;
         _boxCollider.enabled = false;
 
-        _boxColliderCenterReleased = new Vector3(0.0f, -_boxCollider.size.y * 0.4f, 0.0f);
+        _boxColliderCenterReleased = new Vector3(0.0f, -_boxCollider.size.y * 0.25f, 0.0f);
         _boxColliderSizeReleased = new Vector3(
-            _boxCollider.size.x,
-            _boxCollider.size.y * 0.2f,
-            _boxCollider.size.z);
+            _boxCollider.size.x * 0.5f,
+            _boxCollider.size.y * 0.5f,
+            _boxCollider.size.z * 0.5f);
 
         _boxColliderCenterDraged = new Vector3(0.0f, 0.0f, 0.0f);
         _boxColliderSizeDraged = new Vector3(
@@ -89,8 +89,19 @@ public class SWindowGroup : SWindow
     {
         childrenList.Add(child);
         child.DoGrouping(transform);
+
+        Refresh();
     }
 
+    public void Refresh()
+    {
+        //All children Assignment Index for Sorting
+        for (int idx = 0; idx < childrenList.Count; idx++)
+        {
+            SWindow sw = childrenList[idx];
+            sw.SetID(idx, childrenList.Count);
+        }
+    }
     public void Ready()
     {
         _currentScale.Set(0.001f, 1.0f, 0.001f);
@@ -105,6 +116,20 @@ public class SWindowGroup : SWindow
 
         _update = () =>
         {
+            childrenList.ForEach((sw) =>
+            {
+                if ((sw.TargetPosition - transform.position).sqrMagnitude > 2.0)
+                {
+                    sw.UnGrouping();
+                    childrenList.Remove(sw);
+                    Refresh();
+
+                    if (childrenList.Count < 2)
+                    {
+                        Remove();
+                    }
+                }  
+            });
         };
     }
 
@@ -112,7 +137,8 @@ public class SWindowGroup : SWindow
     {
         childrenList.ForEach((sw) =>
         {
-            sw.transform.parent = GameObject.Find("_Windows").transform;
+            sw.UnGrouping();
+            childrenList.Remove(sw);
         });
 
         _targetScale.Set(0.001f, 1.0f, 0.001f);

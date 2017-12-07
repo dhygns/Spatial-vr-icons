@@ -6,7 +6,8 @@ using System;
 public class SWindow : MonoBehaviour
 {
     //SWindow Grouping
-    private int _groupID, _memberID;
+    private int _memberCount, _memberID;
+    private float _memberRatio = 0.0f;
     private bool _isReadyForGrouping;
     private bool _isGrouping;
     private GameObject _prefabGroup;
@@ -67,7 +68,7 @@ public class SWindow : MonoBehaviour
         _boxColliderSizeReleased = cmpt.size;
         _boxColliderCenterReleased = cmpt.center;
 
-        _boxColliderSizeDraged = new Vector3(cmpt.size.x * 1.5f, cmpt.size.y * 1.5f, Mathf.Min(cmpt.size.y * 1.5f, 1.0f));
+        _boxColliderSizeDraged = new Vector3(cmpt.size.x, cmpt.size.y, Mathf.Min(cmpt.size.y, 1.0f));
         _boxColliderCenterDraged = cmpt.center;
     }
 
@@ -110,7 +111,10 @@ public class SWindow : MonoBehaviour
 
         _listCollidedSWindows.ForEach((SWindow sw) =>
         {
-            sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
+            if (sw.IsGrouping == false)
+            {
+                sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
+            }
         });
     }
 
@@ -162,7 +166,7 @@ public class SWindow : MonoBehaviour
         _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
     }
-    
+
     public virtual void UpdateGroupingScale()
     {
 
@@ -170,12 +174,22 @@ public class SWindow : MonoBehaviour
 
     public virtual void UpdateGroupingPosition()
     {
+        _targetPosition.x = transform.parent.position.x;
+        _targetPosition.y = transform.parent.position.y + 0.1f;
+        _targetPosition.z = transform.parent.position.z;
 
+        _targetPosition += transform.parent.right * _memberRatio;
+
+        _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
+        transform.position = _currentPosition;
     }
 
     public virtual void UpdateGroupingLooker()
     {
+        _targetLooker = _currentPosition + transform.parent.forward;
 
+        _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
+        transform.LookAt(_currentLooker, Vector3.up);
     }
 
     public void UpdateCheckingGrouping()
@@ -195,16 +209,20 @@ public class SWindow : MonoBehaviour
 
                 if (_groupingTimer > 1.0f)
                 {
-                    Vector3 target = (transform.position + _groupingCoord.transform.position) * 0.5f;
-                    Transform parent = GameObject.Find("_Windows").transform;
-                    GameObject go = Instantiate(_prefabGroup, target, Quaternion.identity, parent);
+                    if(_groupingCoord is SWindowGroup)
+                    {
+                        _swTmp = _groupingCoord as SWindowGroup;
+                    }
+                    else
+                    {
+                        Vector3 target = (transform.position + _groupingCoord.transform.position) * 0.5f;
+                        Transform parent = GameObject.Find("_Windows").transform;
+                        GameObject go = Instantiate(_prefabGroup, target, Quaternion.identity, parent);
+                        _swTmp = go.GetComponent<SWindowGroup>();
 
+                        go.SetActive(true);
+                    }
                     _groupingTimer = 0.0f;
-
-                    go.SetActive(true);
-
-                    _swTmp = go.GetComponent<SWindowGroup>();
-
                     _updateGrouping = UpdateCreatingGrouping;
                 }
             }
@@ -243,8 +261,11 @@ public class SWindow : MonoBehaviour
         }
         else
         {
+            if (_groupingCoord != _swTmp)
+            {
+                _swTmp.AddSWindow(_groupingCoord);
+            }
             _swTmp.AddSWindow(this);
-            _swTmp.AddSWindow(_groupingCoord);
             _swTmp.Setup();
 
             //Fix & 
@@ -261,7 +282,6 @@ public class SWindow : MonoBehaviour
 
         _isGrouping = true;
         _targetPosition = parent.position;
-
         _targetLooker = parent.forward;
 
         _updateLogic = null;
@@ -272,9 +292,11 @@ public class SWindow : MonoBehaviour
 
     public void UnGrouping()
     {
+        transform.parent = GameObject.Find("_Windows").transform;
         _isGrouping = false;
 
-        _updateLogic = null;
+        /* * * * NEED FIX * * * */
+        //_updateLogic to idle or grab
     }
 
     public virtual void OnClicked(Vector3 pos, Vector3 forward)
@@ -447,13 +469,13 @@ public class SWindow : MonoBehaviour
             _targetScale = value;
         }
     }
-
-    public int ID
+    
+    public void SetID(int id, int count)
     {
-        set
-        {
-            _memberID = value;
-        }
+        _memberID = id;
+        _memberCount = count;
+        _memberRatio = ((float)_memberID / (float)(_memberCount - 1) - 0.5f) * (float)(_memberCount - 1) * 0.5f;
+
     }
 
     public bool IsGrouping
