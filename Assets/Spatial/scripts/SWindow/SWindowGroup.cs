@@ -16,8 +16,16 @@ public class SWindowGroup : SWindow
     private Vector3 _titleCurrentScale;
     private Vector3 _titleTargetScale;
 
+    private Vector3 _titleMinimalizedScale;
     private Vector3 _titleHoveredScale;
     private Vector3 _titleDefaultScale;
+
+    private Vector3 _titleCurrentPosition;
+    private Vector3 _titleTargetPosition;
+
+    private Vector3 _titleHoveredPosition;
+    private Vector3 _titleMinimalizedPosition;
+    private Vector3 _titleDefaultPosition;
 
     protected override void Awake()
     {
@@ -35,6 +43,12 @@ public class SWindowGroup : SWindow
         _titleDefaultScale = _titleTransform.localScale;
         _titleHoveredScale = _titleTransform.localScale * 1.1f;
 
+
+        _titleCurrentPosition = _titleTransform.localPosition;
+        _titleTargetPosition = _titleTransform.localPosition;
+
+        _titleDefaultPosition = _titleTransform.localPosition;
+        _titleHoveredPosition = _titleTransform.localPosition;
 
         //Re Init for Grouping Objects
         _boxCollider.isTrigger = true;
@@ -79,15 +93,20 @@ public class SWindowGroup : SWindow
 
     public override void UpdateDefaultLogic()
     {
+        //Set Main Object Transform
         base.UpdateDefaultLogic();
 
+        //Set Title Object Transform
         _titleCurrentScale += (_titleTargetScale - _titleCurrentScale) * 8.0f * Time.deltaTime;
         _titleTransform.localScale = _titleCurrentScale;
+
+        _titleCurrentPosition += (_titleTargetPosition - _titleCurrentPosition) * 8.0f * Time.deltaTime;
+        _titleTransform.localPosition = _titleCurrentPosition;
     }
 
     public override void UpdateGrapedLogic()
     {
-
+        //Set Main Object Transform
         _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
         transform.localScale = _currentScale;
 
@@ -99,21 +118,88 @@ public class SWindowGroup : SWindow
 
         transform.LookAt(_currentLooker, Vector3.up);
 
+        //Set Title Object Transform
         _titleCurrentScale += (_titleTargetScale - _titleCurrentScale) * 8.0f * Time.deltaTime;
         _titleTransform.localScale = _titleCurrentScale;
+
+        _titleCurrentPosition += (_titleTargetPosition - _titleCurrentPosition) * 8.0f * Time.deltaTime;
+        _titleTransform.localPosition = _titleCurrentPosition;
     }
 
     public override void Focusing()
     {
         base.Focusing();
+
         _titleTargetScale = _titleHoveredScale;
+        _titleTargetPosition = _titleHoveredPosition;
     }
 
     public override void Blurring()
     {
         base.Blurring();
+
         _titleTargetScale = _titleDefaultScale;
+        _titleTargetPosition = _titleDefaultPosition;
     }
+
+    public new void Minimalize()
+    {
+        //Setup Position & Scale for Default & Hovered When Minimalized
+        _titleDefaultPosition = new Vector3(0.0f, 0.0f, 0.0f);
+        _titleDefaultScale = new Vector3(0.32f, 0.33f, 0.015f);
+
+        _titleHoveredPosition = _titleDefaultPosition;
+        _titleHoveredScale = _titleDefaultScale;
+
+        _titleTargetScale = _titleDefaultScale;
+        _titleTargetPosition = _titleDefaultPosition;
+
+        //Setup Collider Via Transform
+        _boxColliderSizeReleased = _titleDefaultScale + new Vector3(0.02f, 0.02f, 0.1f);
+        _boxColliderCenterReleased = _titleTargetPosition;
+
+        _boxCollider.size = _boxColliderSizeReleased;
+        _boxCollider.center = _boxColliderCenterReleased;
+
+        _childrenList.ForEach((sw) =>
+        {
+            if (sw != null)
+            {
+                sw.Minimalize();
+            }
+        });
+    }
+
+    public new void Generalize()
+    {
+        //Setup Position & Scale for Default & Hovered When Generalized
+        _titleDefaultPosition = new Vector3(0.0f, 0.4f, 0.0f);
+        _titleDefaultScale = new Vector3(0.7f, 0.05f, 0.008f);
+
+        _titleHoveredPosition = _titleDefaultPosition;
+        _titleHoveredScale = _titleDefaultScale * 1.1f;
+
+        _titleTargetScale = _titleDefaultScale;
+        _titleTargetPosition = _titleDefaultPosition;
+
+        //Setup Collider Via Transform
+        _boxColliderSizeReleased = _titleDefaultScale + new Vector3(0.02f, 0.02f, 0.1f);
+        _boxColliderCenterReleased = _titleTargetPosition;
+
+        _boxCollider.size = _boxColliderSizeReleased;
+        _boxCollider.center = _boxColliderCenterReleased;
+
+        _childrenList.ForEach((sw) =>
+        {
+            if (sw != null)
+            {
+                sw.Generalize();
+            }
+        });
+    }
+
+
+
     // 
     public override void OnClicked(Vector3 pos, Vector3 forward)
     {

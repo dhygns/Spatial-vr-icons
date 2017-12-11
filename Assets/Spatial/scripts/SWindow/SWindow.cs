@@ -278,7 +278,7 @@ public class SWindow : MonoBehaviour
         }
 
     }
-    public void DoGrouping(Transform parent)
+    public virtual void DoGrouping(Transform parent)
     {
         _parent = parent;
 
@@ -291,7 +291,7 @@ public class SWindow : MonoBehaviour
         _updateLogic += UpdateGroupingLogic;
     }
 
-    public void UnGrouping()
+    public virtual void UnGrouping()
     {
         GameObject go = GameObject.Find("_Windows");
         if(go != null)
@@ -312,14 +312,40 @@ public class SWindow : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 
+    /// (bottom up)
+    /// </summary>
     public virtual void Focusing()
     {
 
     }
 
+    /// <summary>
+    /// 
+    /// (bottom up)
+    /// </summary>
     public virtual void Blurring()
     {
 
+    }
+
+    /// <summary>
+    /// 
+    /// (Top down)
+    /// </summary>
+    public void Minimalize()
+    {
+        Debug.Log("Minimalized");
+    }
+
+    /// <summary>
+    /// 
+    /// (Top down)
+    /// </summary>
+    public void Generalize()
+    {
+        Debug.Log("Generalized");
     }
 
     public virtual void OnClicked(Vector3 pos, Vector3 forward)
