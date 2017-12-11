@@ -51,8 +51,29 @@ public class SPointerLogic
         {
             _distance = Mathf.Min(_maxDistance, _hit.distance);
         }
+        else
+        {
+            if (_obj != null)
+            {
+                _obj.Blurring();
+            }
+            _obj = null;
+        }
+
+        if (_hit.collider != null)
+        {
+            _obj = _hit.collider.GetComponent<SWindow>();
+        }
 
         _position = _ray.origin + _ray.direction * _distance;
+
+        if (_obj != null)
+        {
+            Vector3 pos = _obj.transform.position - _ray.origin;
+            _maxDistance = pos.magnitude;
+            _obj.Focusing();
+        }
+
         Debug.DrawLine(_ray.origin, _position, Color.gray);
     }
 
@@ -83,6 +104,7 @@ public class SPointerLogic
             _maxDistance = pos.magnitude;
             _obj.OnClicked(_position, -_ray.direction);
         }
+
         Debug.DrawLine(_ray.origin, _position, Color.magenta);
     }
 
@@ -134,8 +156,10 @@ public class SPointerLogic
         if (_obj != null)
         {
             _obj.OnReleased(_position, -_ray.direction);
+            _obj.Blurring();
             _obj = null;
         }
+
         Debug.DrawLine(_ray.origin, _ray.origin + _ray.direction, Color.magenta);
     }
 

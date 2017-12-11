@@ -5,13 +5,29 @@ using System;
 
 public class SWindow : MonoBehaviour
 {
+    //SWindow Status
+    protected enum LOGIC
+    {
+        Default, Clicked, Grabed, Released
+    };
+
+    protected enum GROUP
+    {
+        Ready, None, Done 
+    };
+
     //SWindow Grouping
     private int _memberCount, _memberID;
     private float _memberRatio = 0.0f;
-    private bool _isReadyForGrouping;
-    private bool _isGrouping;
+    protected GROUP _group;
+
+    private SWindow _groupingCoord = null;
+    private float _groupingTimer = 0.0f;
+
     private GameObject _prefabGroup;
     private SWindowGroup _swTmp;
+
+    private Transform _parent;
 
 
     //SWindow Components
@@ -19,6 +35,8 @@ public class SWindow : MonoBehaviour
     protected Rigidbody _rigidBody;
 
     //SWindow Logics
+    protected LOGIC _logic;
+
     protected delegate void UpdateLogic();
     protected UpdateLogic _updateLogic = null;
     protected UpdateLogic _updateGrouping = null;
@@ -43,9 +61,6 @@ public class SWindow : MonoBehaviour
 
     private Ray _ray;
     private RaycastHit _hit;
-
-    private SWindow _groupingCoord = null;
-    private float _groupingTimer = 0.0f;
 
     //List of SWindows
     protected List<SWindow> _listCollidedSWindows;
@@ -74,22 +89,23 @@ public class SWindow : MonoBehaviour
 
     protected virtual void Awake()
     {
-        //Load Resources 
-        _isReadyForGrouping = false;
-        _isGrouping = false;
+        //SetStatus
+        _logic = LOGIC.Default;
+        _group = GROUP.None;
 
+        //Load Resources 
         _prefabGroup = Resources.Load("Prefabs/Group") as GameObject;
-        _updateGrouping = UpdateCheckingGrouping;
 
         //init objects
         _listCollidedSWindows = new List<SWindow>();
         _ray = new Ray();
+        _parent = transform.parent;
 
         //Position &  Looker Init
         _updateLogic = null;
-        _updateLogic += UpdateDefaultScale;
-        _updateLogic += UpdateDefaultPosition;
-        _updateLogic += UpdateDefaultLooker;
+        _updateLogic += UpdateDefaultLogic;
+
+        _updateGrouping = UpdateCheckingGrouping;
 
         _currentScale = _targetScale = transform.localScale;
         _currentPosition = _targetPosition = transform.position;
@@ -111,7 +127,7 @@ public class SWindow : MonoBehaviour
 
         _listCollidedSWindows.ForEach((SWindow sw) =>
         {
-            if (sw.IsGrouping == false)
+            if (sw._group != GROUP.Done)
             {
                 sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
             }
@@ -133,74 +149,55 @@ public class SWindow : MonoBehaviour
         }
     }
 
-    public virtual void UpdateDefaultScale()
+    public virtual void UpdateDefaultLogic()
     {
         _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
         transform.localScale = _currentScale;
+
+        //Position No Worked, Depends on rigidbody.
+        //Looker Just Looking forward
     }
 
-    public virtual void UpdateDefaultPosition()
-    {
-        //No Working, Depends on rigidbody.
-    }
-
-    public virtual void UpdateDefaultLooker()
-    {
-        //Just Looking forward
-    }
-
-    public virtual void UpdateGrapedScale()
+    public virtual void UpdateGrapedLogic()
     {
         _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
         transform.localScale = _currentScale;
-    }
 
-    public virtual void UpdateGrapedPosition()
-    {
         _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
         transform.position = _currentPosition;
-    }
 
-    public virtual void UpdateGrapedLooker()
-    {
         _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
     }
 
-    public virtual void UpdateGroupingScale()
+    public virtual void UpdateGroupingLogic()
     {
+        _targetPosition.x = _parent.position.x;
+        _targetPosition.y = _parent.position.y + 0.1f;
+        _targetPosition.z = _parent.position.z;
 
-    }
-
-    public virtual void UpdateGroupingPosition()
-    {
-        _targetPosition.x = transform.parent.position.x;
-        _targetPosition.y = transform.parent.position.y + 0.1f;
-        _targetPosition.z = transform.parent.position.z;
-
-        _targetPosition += transform.parent.right * _memberRatio;
+        _targetPosition += _parent.right * _memberRatio;
+        _targetLooker = _currentPosition + _parent.forward;
 
         _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
         transform.position = _currentPosition;
-    }
-
-    public virtual void UpdateGroupingLooker()
-    {
-        _targetLooker = _currentPosition + transform.parent.forward;
-
+        
         _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
     }
 
     public void UpdateCheckingGrouping()
     {
-        if (_isGrouping == true) return;
+        if (_group == GROUP.Done) return;
 
         _ray.origin = transform.position;
         _ray.direction = -transform.forward;
 
         //Search Object For Grouping
-        if (_isReadyForGrouping && Physics.Raycast(_ray, out _hit, 1.0f) && _hit.transform != null && _hit.transform.GetComponent<SWindow>().IsGrouping == false)
+        if (_group == GROUP.Ready && 
+            Physics.Raycast(_ray, out _hit, 1.0f) && 
+            _hit.transform != null && 
+            _hit.transform.GetComponent<SWindow>()._group != GROUP.Done)
         {
             SWindow coord = _hit.transform.GetComponent<SWindow>();
             if (coord != null && coord == _groupingCoord)
@@ -215,11 +212,13 @@ public class SWindow : MonoBehaviour
                     }
                     else
                     {
-                        Vector3 target = (transform.position + _groupingCoord.transform.position) * 0.5f;
-                        Transform parent = GameObject.Find("_Windows").transform;
-                        GameObject go = Instantiate(_prefabGroup, target, Quaternion.identity, parent);
-                        _swTmp = go.GetComponent<SWindowGroup>();
+                        Vector3 targetPosition = (transform.position + _groupingCoord.transform.position) * 0.5f;
+                        Quaternion targetRotation = Quaternion.Lerp(transform.rotation, _groupingCoord.transform.rotation, 0.5f);
 
+                        Transform parent = GameObject.Find("_Windows").transform;
+                        GameObject go = Instantiate(_prefabGroup, targetPosition, targetRotation, parent);
+
+                        _swTmp = go.GetComponent<SWindowGroup>();
                         go.SetActive(true);
                     }
                     _groupingTimer = 0.0f;
@@ -244,9 +243,12 @@ public class SWindow : MonoBehaviour
         _ray.direction = -transform.forward;
 
         //Search Object For Grouping
-        if (_isReadyForGrouping)
+        if (_group == GROUP.Ready)
         {
-            if (Physics.Raycast(_ray, out _hit, 1.0f) && _hit.transform != null && (_hit.transform.GetComponent<SWindow>() == _groupingCoord || _hit.transform.GetComponent<SWindow>() == _swTmp))
+            if (
+                Physics.Raycast(_ray, out _hit, 1.0f) && 
+                _hit.transform != null && 
+                (_hit.transform.GetComponent<SWindow>() == _groupingCoord || _hit.transform.GetComponent<SWindow>() == _swTmp))
             {
                 return;
             }
@@ -278,30 +280,58 @@ public class SWindow : MonoBehaviour
     }
     public void DoGrouping(Transform parent)
     {
-        transform.parent = parent;
+        _parent = parent;
 
-        _isGrouping = true;
+        _group = GROUP.Done;
+
         _targetPosition = parent.position;
         _targetLooker = parent.forward;
 
         _updateLogic = null;
-        _updateLogic += UpdateGroupingScale;
-        _updateLogic += UpdateGroupingPosition;
-        _updateLogic += UpdateGroupingLooker;
+        _updateLogic += UpdateGroupingLogic;
     }
 
     public void UnGrouping()
     {
-        transform.parent = GameObject.Find("_Windows").transform;
-        _isGrouping = false;
+        GameObject go = GameObject.Find("_Windows");
+        if(go != null)
+        {
+            _parent = go.transform;
+        }
 
-        /* * * * NEED FIX * * * */
-        //_updateLogic to idle or grab
+        _group = GROUP.None;
+
+        _updateLogic = null;
+        if (_logic == LOGIC.Grabed)
+        {
+            _updateLogic += UpdateGrapedLogic;
+        }
+        else
+        {
+            _updateLogic += UpdateDefaultLogic;
+        }
+    }
+
+    public virtual void Focusing()
+    {
+
+    }
+
+    public virtual void Blurring()
+    {
+
     }
 
     public virtual void OnClicked(Vector3 pos, Vector3 forward)
     {
-        _isReadyForGrouping = true;
+        //Set Status
+        _logic = LOGIC.Clicked;
+
+        //Set Grouping Status
+        if (_group != GROUP.Done)
+        {
+            _group = GROUP.Ready;
+        }
 
         _currentPosition = transform.position;
         _targetPosition = pos;
@@ -310,9 +340,7 @@ public class SWindow : MonoBehaviour
         _targetLooker = pos + forward;
 
         _updateLogic = null;
-        _updateLogic += UpdateGrapedScale;
-        _updateLogic += UpdateGrapedPosition;
-        _updateLogic += UpdateGrapedLooker;
+        _updateLogic += UpdateGrapedLogic;
 
         _boxCollider.size = _boxColliderSizeDraged;
         _boxCollider.center = _boxColliderCenterDraged;
@@ -322,48 +350,61 @@ public class SWindow : MonoBehaviour
 
     public virtual void OnDraged(Vector3 pos, Vector3 forward)
     {
+        //Set Status
+        _logic = LOGIC.Grabed;
+
+        //Set Transform
         _targetPosition = pos;
         _targetLooker = pos + forward;
 
+        //Debugging
         Debug.DrawLine(_ray.origin, _ray.origin + _ray.direction, Color.cyan);
     }
 
     public virtual void OnReleased(Vector3 pos, Vector3 forward)
     {
-        _isReadyForGrouping = false;
+        //Set Status
+        _logic = LOGIC.Released;
 
+        //Set Grouping Status
+        if (_group != GROUP.Done)
+        {
+            _group = GROUP.None;
+        }
+
+        //Set Transform
         _targetPosition = pos;
         _targetLooker = transform.position + transform.forward;
 
+        //Clear CollidedWindows List
         _listCollidedSWindows.Clear();
 
 
-        if (_isGrouping == true)
+        if (_group == GROUP.Done)
         {
             _updateLogic = null;
-            _updateLogic += UpdateGroupingScale;
-            _updateLogic += UpdateGroupingPosition;
-            _updateLogic += UpdateGroupingLooker;
+            _updateLogic += UpdateGroupingLogic;
         }
         else
         {
             _updateLogic = null;
-            _updateLogic += UpdateDefaultScale;
-            _updateLogic += UpdateDefaultPosition;
-            _updateLogic += UpdateDefaultLooker;
+            _updateLogic += UpdateDefaultLogic;
         }
 
         _boxCollider.size = _boxColliderSizeReleased;
         _boxCollider.center = _boxColliderCenterReleased;
         _boxCollider.isTrigger = false;
-
     }
 
     //Listeners
 
+    /// <summary>
+    /// Collider Manager (Enter)
+    /// </summary>
+    /// <param name="other"></param>
     private void OnTriggerEnter(Collider other)
     {
-        if (other.transform == transform.parent)
+        if (other.transform == _parent)
         {
             return;
         }
@@ -387,9 +428,13 @@ public class SWindow : MonoBehaviour
         _listCollidedSWindows.Add(cmpt);
     }
 
+    /// <summary>
+    /// Collider Manager (Exit)
+    /// </summary>
+    /// <param name="other"></param>
     private void OnTriggerExit(Collider other)
     {
-        if (other.transform == transform.parent)
+        if (other.transform == _parent)
         {
             return;
         }
@@ -432,6 +477,9 @@ public class SWindow : MonoBehaviour
         callback(cmpt);
     }
 
+    /// <summary>
+    /// Getter / Setter For Position
+    /// </summary>
     public Vector3 TargetPosition
     {
         get
@@ -444,6 +492,9 @@ public class SWindow : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Getter / Setter For Looker
+    /// </summary>
     public Vector3 TargetLooker
     {
         get
@@ -457,6 +508,9 @@ public class SWindow : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Getter / Setter For Scale
+    /// </summary>
     public Vector3 TargetScale
     {
         get
@@ -469,22 +523,20 @@ public class SWindow : MonoBehaviour
             _targetScale = value;
         }
     }
-    
+
+    /// <summary>
+    /// Setter For Indexing in Group
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="count"></param>
     public void SetID(int id, int count)
     {
         _memberID = id;
         _memberCount = count;
-        _memberRatio = ((float)_memberID / (float)(_memberCount - 1) - 0.5f) * (float)(_memberCount - 1) * 0.5f;
 
-    }
-
-    public bool IsGrouping
-    {
-        get
+        if(count > 1)
         {
-            return _isGrouping;
+            _memberRatio = ((float)_memberID / (float)(_memberCount - 1) - 0.5f) * (float)(_memberCount - 1) * 0.5f;
         }
     }
-
-
 }
