@@ -16,9 +16,20 @@ public class SWindow : MonoBehaviour
         Ready, None, Done 
     };
 
+    //SWindow Icons
+    private GameObject _iconMini;
+    private Vector3 _iconMiniTargetScale;
+    private Vector3 _iconMiniCurrentScale;
+
+    private GameObject _iconBig;
+    private Vector3 _iconBigTargetScale;
+    private Vector3 _iconBigCurrentScale;
+
+
     //SWindow Grouping
     private int _memberCount, _memberID;
     private float _memberRatio = 0.0f;
+    private float _memberRatioScale = 1.0f;
     protected GROUP _group;
 
     private SWindow _groupingCoord = null;
@@ -36,6 +47,7 @@ public class SWindow : MonoBehaviour
 
     //SWindow Logics
     protected LOGIC _logic;
+    protected float _logicSpeed = 8.0f;
 
     protected delegate void UpdateLogic();
     protected UpdateLogic _updateLogic = null;
@@ -79,6 +91,9 @@ public class SWindow : MonoBehaviour
         _boxCollider = cmpt;
 
         cmpt.enabled = true;
+
+        cmpt.center = Vector3.zero;
+        cmpt.size = new Vector3(0.35f, 0.35f, 0.02f);
 
         _boxColliderSizeReleased = cmpt.size;
         _boxColliderCenterReleased = cmpt.center;
@@ -151,39 +166,56 @@ public class SWindow : MonoBehaviour
 
     public virtual void UpdateDefaultLogic()
     {
-        _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
+        _currentScale += (_targetScale - _currentScale) * _logicSpeed * Time.deltaTime;
         transform.localScale = _currentScale;
 
+        _iconMiniCurrentScale += (_iconMiniTargetScale - _iconMiniCurrentScale) * _logicSpeed * Time.deltaTime;
+        if (_iconMini != null) _iconMini.transform.localScale = _iconMiniCurrentScale;
+
+        _iconBigCurrentScale += (_iconBigTargetScale - _iconBigCurrentScale) * _logicSpeed * Time.deltaTime;
+        if (_iconBig != null) _iconBig.transform.localScale = _iconBigCurrentScale;
         //Position No Worked, Depends on rigidbody.
         //Looker Just Looking forward
     }
 
     public virtual void UpdateGrapedLogic()
     {
-        _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
+        _currentScale += (_targetScale - _currentScale) * _logicSpeed * Time.deltaTime;
         transform.localScale = _currentScale;
 
-        _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
+        _currentPosition += (_targetPosition - _currentPosition) * _logicSpeed * Time.deltaTime;
         transform.position = _currentPosition;
 
-        _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
+        _currentLooker += (_targetLooker - _currentLooker) * _logicSpeed * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
+        
+        _iconMiniCurrentScale += (_iconMiniTargetScale - _iconMiniCurrentScale) * _logicSpeed * Time.deltaTime;
+        if (_iconMini != null) _iconMini.transform.localScale = _iconMiniCurrentScale;
+
+        _iconBigCurrentScale += (_iconBigTargetScale - _iconBigCurrentScale) * _logicSpeed * Time.deltaTime;
+        if (_iconBig != null) _iconBig.transform.localScale = _iconBigCurrentScale;
     }
 
     public virtual void UpdateGroupingLogic()
     {
         _targetPosition.x = _parent.position.x;
-        _targetPosition.y = _parent.position.y + 0.1f;
+        _targetPosition.y = _parent.position.y;
         _targetPosition.z = _parent.position.z;
 
-        _targetPosition += _parent.right * _memberRatio;
+        _targetPosition += _parent.right * _memberRatio * _memberRatioScale;
         _targetLooker = _currentPosition + _parent.forward;
 
-        _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
+        _currentPosition += (_targetPosition - _currentPosition) * _logicSpeed * Time.deltaTime;
         transform.position = _currentPosition;
         
-        _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
+        _currentLooker += (_targetLooker - _currentLooker) * _logicSpeed * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
+
+        _iconMiniCurrentScale += (_iconMiniTargetScale - _iconMiniCurrentScale) * _logicSpeed * Time.deltaTime;
+        if (_iconMini != null) _iconMini.transform.localScale = _iconMiniCurrentScale;
+
+        _iconBigCurrentScale += (_iconBigTargetScale - _iconBigCurrentScale) * _logicSpeed * Time.deltaTime;
+        if (_iconBig != null) _iconBig.transform.localScale = _iconBigCurrentScale;
     }
 
     public void UpdateCheckingGrouping()
@@ -334,18 +366,26 @@ public class SWindow : MonoBehaviour
     /// 
     /// (Top down)
     /// </summary>
-    public void Minimalize()
+    public virtual void Minimalize()
     {
         Debug.Log("Minimalized");
+        _memberRatioScale = 0.2f;
+        _logicSpeed = 16.0f;
+        _iconMiniTargetScale = Vector3.one * 0.05f;
+        _iconBigTargetScale = Vector3.one * 0.0f;
     }
 
     /// <summary>
     /// 
     /// (Top down)
     /// </summary>
-    public void Generalize()
+    public virtual void Generalize()
     {
         Debug.Log("Generalized");
+        _memberRatioScale = 1.0f;
+        _logicSpeed = 8.0f;
+        _iconMiniTargetScale = Vector3.zero;
+        _iconBigTargetScale = Vector3.one * 5.0f;
     }
 
     public virtual void OnClicked(Vector3 pos, Vector3 forward)
@@ -564,5 +604,16 @@ public class SWindow : MonoBehaviour
         {
             _memberRatio = ((float)_memberID / (float)(_memberCount - 1) - 0.5f) * (float)(_memberCount - 1) * 0.5f;
         }
+    }
+
+    public void SetMiniIcon(string assetPath)
+    {
+        _iconBig = transform.GetChild(0).gameObject;
+        _iconBigCurrentScale = _iconBig.transform.localScale;
+        _iconBigTargetScale = _iconBig.transform.localScale;
+
+        _iconMini = Instantiate(Resources.Load(assetPath) as GameObject, transform);
+        _iconMini.transform.localPosition = Vector3.zero;
+        _iconMini.transform.localScale = Vector3.zero;
     }
 }

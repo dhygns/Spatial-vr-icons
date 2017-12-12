@@ -43,7 +43,6 @@ public class SWindowGroup : SWindow
         _titleDefaultScale = _titleTransform.localScale;
         _titleHoveredScale = _titleTransform.localScale * 1.1f;
 
-
         _titleCurrentPosition = _titleTransform.localPosition;
         _titleTargetPosition = _titleTransform.localPosition;
 
@@ -54,11 +53,8 @@ public class SWindowGroup : SWindow
         _boxCollider.isTrigger = true;
         _boxCollider.enabled = false;
 
-        _boxColliderCenterReleased = new Vector3(0.0f, _boxCollider.size.y * 0.4f, 0.0f);
-        _boxColliderSizeReleased = new Vector3(
-            1.0f, // _boxCollider.size.x * 0.5f,
-            _boxCollider.size.y * 0.1f,
-            _boxCollider.size.z * 0.1f);
+        _boxColliderCenterReleased = new Vector3(0.0f, 0.4f, 0.0f);
+        _boxColliderSizeReleased = new Vector3(0.8f, 0.1f, 0.1f);
 
         _boxColliderCenterDraged = new Vector3(0.0f, 0.0f, 0.0f);
         _boxColliderSizeDraged = new Vector3(
@@ -97,33 +93,47 @@ public class SWindowGroup : SWindow
         base.UpdateDefaultLogic();
 
         //Set Title Object Transform
-        _titleCurrentScale += (_titleTargetScale - _titleCurrentScale) * 8.0f * Time.deltaTime;
+        _titleCurrentScale += (_titleTargetScale - _titleCurrentScale) * _logicSpeed * Time.deltaTime;
         _titleTransform.localScale = _titleCurrentScale;
 
-        _titleCurrentPosition += (_titleTargetPosition - _titleCurrentPosition) * 8.0f * Time.deltaTime;
+        _titleCurrentPosition += (_titleTargetPosition - _titleCurrentPosition) * _logicSpeed * Time.deltaTime;
         _titleTransform.localPosition = _titleCurrentPosition;
     }
 
     public override void UpdateGrapedLogic()
     {
         //Set Main Object Transform
-        _currentScale += (_targetScale - _currentScale) * 8.0f * Time.deltaTime;
+        _currentScale += (_targetScale - _currentScale) * _logicSpeed * Time.deltaTime;
         transform.localScale = _currentScale;
 
-        _currentPosition += (_targetPosition - _currentPosition) * 8.0f * Time.deltaTime;
+        _currentPosition += (_targetPosition - _currentPosition) * _logicSpeed * Time.deltaTime;
         transform.position = _currentPosition;
 
-        _currentLooker += (_targetLooker - _currentLooker) * 8.0f * Time.deltaTime;
+        _currentLooker += (_targetLooker - _currentLooker) * _logicSpeed * Time.deltaTime;
         _currentLooker.y = transform.position.y;
 
         transform.LookAt(_currentLooker, Vector3.up);
 
         //Set Title Object Transform
-        _titleCurrentScale += (_titleTargetScale - _titleCurrentScale) * 8.0f * Time.deltaTime;
+        _titleCurrentScale += (_titleTargetScale - _titleCurrentScale) * _logicSpeed * Time.deltaTime;
         _titleTransform.localScale = _titleCurrentScale;
 
-        _titleCurrentPosition += (_titleTargetPosition - _titleCurrentPosition) * 8.0f * Time.deltaTime;
+        _titleCurrentPosition += (_titleTargetPosition - _titleCurrentPosition) * _logicSpeed * Time.deltaTime;
         _titleTransform.localPosition = _titleCurrentPosition;
+    }
+
+    public override void UpdateGroupingLogic()
+    {
+        //Set Main Object Transform
+        base.UpdateGroupingLogic();
+
+        //Set Title Object Transform
+        _titleCurrentScale += (_titleTargetScale - _titleCurrentScale) * _logicSpeed * Time.deltaTime;
+        _titleTransform.localScale = _titleCurrentScale;
+
+        _titleCurrentPosition += (_titleTargetPosition - _titleCurrentPosition) * _logicSpeed * Time.deltaTime;
+        _titleTransform.localPosition = _titleCurrentPosition;
+
     }
 
     public override void Focusing()
@@ -141,8 +151,8 @@ public class SWindowGroup : SWindow
         _titleTargetScale = _titleDefaultScale;
         _titleTargetPosition = _titleDefaultPosition;
     }
-
-    public new void Minimalize()
+    
+    public void Binding()
     {
         //Setup Position & Scale for Default & Hovered When Minimalized
         _titleDefaultPosition = new Vector3(0.0f, 0.0f, 0.0f);
@@ -161,6 +171,7 @@ public class SWindowGroup : SWindow
         _boxCollider.size = _boxColliderSizeReleased;
         _boxCollider.center = _boxColliderCenterReleased;
 
+
         _childrenList.ForEach((sw) =>
         {
             if (sw != null)
@@ -170,7 +181,7 @@ public class SWindowGroup : SWindow
         });
     }
 
-    public new void Generalize()
+    public void UnBinding()
     {
         //Setup Position & Scale for Default & Hovered When Generalized
         _titleDefaultPosition = new Vector3(0.0f, 0.4f, 0.0f);
@@ -198,11 +209,35 @@ public class SWindowGroup : SWindow
         });
     }
 
+    public override void Minimalize()
+    {
+        base.Minimalize();
 
+        //make child scale zero.
+    }
+
+    public override void Generalize()
+    {
+        base.Generalize();
+        //make child scale orin.
+    }
+
+    public override void DoGrouping(Transform parent)
+    {
+        base.DoGrouping(parent);
+        Binding();
+    }
+
+    public override void UnGrouping()
+    {
+        base.UnGrouping();
+        UnBinding();
+    }   
 
     // 
     public override void OnClicked(Vector3 pos, Vector3 forward)
     {
+        pos.y -= 0.4f;
         base.OnClicked(pos, forward);
 
         //Fixed informations 
@@ -211,11 +246,13 @@ public class SWindowGroup : SWindow
 
     public override void OnDraged(Vector3 pos, Vector3 forward)
     {
+        pos.y -= 0.4f;
         base.OnDraged(pos, forward);
     }
 
     public override void OnReleased(Vector3 pos, Vector3 forward)
     {
+        pos.y -= 0.4f;
         base.OnReleased(pos, forward);
 
         //Fixed informations 

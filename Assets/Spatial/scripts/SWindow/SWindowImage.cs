@@ -5,6 +5,12 @@ using UnityEngine;
 public class SWindowImage : SWindow
 {
 
+    protected override void Awake()
+    {
+        base.Awake();
+        SetMiniIcon("Prefabs/Web_MiniIcon");
+    }
+
     // Use this for initialization
     protected override void Start()
     {
