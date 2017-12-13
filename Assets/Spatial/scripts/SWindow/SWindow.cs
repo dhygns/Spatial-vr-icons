@@ -78,8 +78,10 @@ public class SWindow : MonoBehaviour
     protected Vector3 _boxColliderCenterReleased;
     protected Vector3 _boxColliderCenterDraged;
 
+    //SWindow Ray infos
     private Ray _ray;
     private RaycastHit _hit;
+    protected Vector3 _rayPosition;
 
     //List of SWindows
     protected List<SWindow> _listCollidedSWindows;
@@ -122,6 +124,7 @@ public class SWindow : MonoBehaviour
         //init objects
         _listCollidedSWindows = new List<SWindow>();
         _ray = new Ray();
+        _rayPosition = Vector3.zero;
         _parent = transform.parent;
 
         //Position &  Looker Init
@@ -246,7 +249,7 @@ public class SWindow : MonoBehaviour
     {
         if (_group == GROUP.Done) return;
 
-        _ray.origin = transform.position;
+        _ray.origin = transform.position + _rayPosition;
         _ray.direction = -transform.forward;
 
         //Search Object For Grouping
@@ -295,7 +298,7 @@ public class SWindow : MonoBehaviour
 
     public void UpdateCreatingGrouping()
     {
-        _ray.origin = transform.position;
+        _ray.origin = transform.position + _rayPosition;
         _ray.direction = -transform.forward;
 
         //Search Object For Grouping
@@ -310,8 +313,11 @@ public class SWindow : MonoBehaviour
             }
             else
             {
-                _swTmp.Remove();
-                _swTmp = null;
+                if(_groupingCoord != _swTmp)
+                {
+                    _swTmp.Remove();
+                    _swTmp = null;
+                }
                 _groupingCoord = null;
                 _updateGrouping = UpdateCheckingGrouping;
                 return;
@@ -349,11 +355,7 @@ public class SWindow : MonoBehaviour
 
     public virtual void UnGrouping()
     {
-        GameObject go = GameObject.Find("_Windows");
-        if (go != null)
-        {
-            _parent = go.transform;
-        }
+        _parent = null;
 
         _group = GROUP.None;
 

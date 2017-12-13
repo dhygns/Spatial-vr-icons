@@ -67,6 +67,8 @@ public class SWindowGroup : SWindow
         _boxCollider.size = _boxColliderSizeReleased;
 
         _titleHeight = 0.3f;
+        _rayPosition.y = _titleHeight;
+
         Ready();
     }
 
@@ -227,6 +229,7 @@ public class SWindowGroup : SWindow
     {
         base.DoGrouping(parent);
         _titleHeight = 0.0f;
+        _rayPosition.y = _titleHeight;
         Binding();
     }
 
@@ -234,6 +237,7 @@ public class SWindowGroup : SWindow
     {
         base.UnGrouping();
         _titleHeight = 0.3f;
+        _rayPosition.y = _titleHeight;
         UnBinding();
     }   
 
