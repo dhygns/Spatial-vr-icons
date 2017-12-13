@@ -13,10 +13,17 @@ public class SWindow : MonoBehaviour
 
     protected enum GROUP
     {
-        Ready, None, Done 
+        Ready, None, Done
+    };
+
+    protected enum STATE
+    {
+        Generalize, Minimalize
     };
 
     //SWindow Icons
+    protected STATE _state;
+
     private GameObject _iconMini;
     private Vector3 _iconMiniTargetScale;
     private Vector3 _iconMiniCurrentScale;
@@ -104,9 +111,10 @@ public class SWindow : MonoBehaviour
 
     protected virtual void Awake()
     {
-        //SetStatus
+        //SetStates
         _logic = LOGIC.Default;
         _group = GROUP.None;
+        _state = STATE.Generalize;
 
         //Load Resources 
         _prefabGroup = Resources.Load("Prefabs/Group") as GameObject;
@@ -140,13 +148,29 @@ public class SWindow : MonoBehaviour
     {
         Updates();
 
-        _listCollidedSWindows.ForEach((SWindow sw) =>
+        if (_group != GROUP.Done)
         {
-            if (sw._group != GROUP.Done)
+            _listCollidedSWindows.ForEach((SWindow sw) =>
             {
-                sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
-            }
-        });
+                if (sw._group != GROUP.Done)
+                {
+                    sw._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
+                }
+                else if (sw._group == GROUP.Done)
+                {
+                    if (sw._parent == null)
+                    {
+                        return;
+                    }
+                    SWindowGroup swg = sw._parent.GetComponent<SWindowGroup>();
+                    if (swg == null)
+                    {
+                        return;
+                    }
+                    swg._rigidBody.AddForce((sw.TargetPosition - TargetPosition).normalized * 10.0f);
+                }
+            });
+        }
     }
 
     public virtual void Updates()
@@ -188,7 +212,7 @@ public class SWindow : MonoBehaviour
 
         _currentLooker += (_targetLooker - _currentLooker) * _logicSpeed * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
-        
+
         _iconMiniCurrentScale += (_iconMiniTargetScale - _iconMiniCurrentScale) * _logicSpeed * Time.deltaTime;
         if (_iconMini != null) _iconMini.transform.localScale = _iconMiniCurrentScale;
 
@@ -207,7 +231,7 @@ public class SWindow : MonoBehaviour
 
         _currentPosition += (_targetPosition - _currentPosition) * _logicSpeed * Time.deltaTime;
         transform.position = _currentPosition;
-        
+
         _currentLooker += (_targetLooker - _currentLooker) * _logicSpeed * Time.deltaTime;
         transform.LookAt(_currentLooker, Vector3.up);
 
@@ -226,9 +250,9 @@ public class SWindow : MonoBehaviour
         _ray.direction = -transform.forward;
 
         //Search Object For Grouping
-        if (_group == GROUP.Ready && 
-            Physics.Raycast(_ray, out _hit, 1.0f) && 
-            _hit.transform != null && 
+        if (_group == GROUP.Ready &&
+            Physics.Raycast(_ray, out _hit, 1.0f) &&
+            _hit.transform != null &&
             _hit.transform.GetComponent<SWindow>()._group != GROUP.Done)
         {
             SWindow coord = _hit.transform.GetComponent<SWindow>();
@@ -238,7 +262,7 @@ public class SWindow : MonoBehaviour
 
                 if (_groupingTimer > 1.0f)
                 {
-                    if(_groupingCoord is SWindowGroup)
+                    if (_groupingCoord is SWindowGroup)
                     {
                         _swTmp = _groupingCoord as SWindowGroup;
                     }
@@ -278,8 +302,8 @@ public class SWindow : MonoBehaviour
         if (_group == GROUP.Ready)
         {
             if (
-                Physics.Raycast(_ray, out _hit, 1.0f) && 
-                _hit.transform != null && 
+                Physics.Raycast(_ray, out _hit, 1.0f) &&
+                _hit.transform != null &&
                 (_hit.transform.GetComponent<SWindow>() == _groupingCoord || _hit.transform.GetComponent<SWindow>() == _swTmp))
             {
                 return;
@@ -326,7 +350,7 @@ public class SWindow : MonoBehaviour
     public virtual void UnGrouping()
     {
         GameObject go = GameObject.Find("_Windows");
-        if(go != null)
+        if (go != null)
         {
             _parent = go.transform;
         }
@@ -368,7 +392,7 @@ public class SWindow : MonoBehaviour
     /// </summary>
     public virtual void Minimalize()
     {
-        Debug.Log("Minimalized");
+        _state = STATE.Minimalize;
         _memberRatioScale = 0.2f;
         _logicSpeed = 16.0f;
         _iconMiniTargetScale = Vector3.one * 0.05f;
@@ -381,7 +405,7 @@ public class SWindow : MonoBehaviour
     /// </summary>
     public virtual void Generalize()
     {
-        Debug.Log("Generalized");
+        _state = STATE.Generalize;
         _memberRatioScale = 1.0f;
         _logicSpeed = 8.0f;
         _iconMiniTargetScale = Vector3.zero;
@@ -392,6 +416,11 @@ public class SWindow : MonoBehaviour
     {
         //Set Status
         _logic = LOGIC.Clicked;
+
+        if (_state != STATE.Generalize)
+        {
+            return;
+        }
 
         //Set Grouping Status
         if (_group != GROUP.Done)
@@ -419,6 +448,11 @@ public class SWindow : MonoBehaviour
         //Set Status
         _logic = LOGIC.Grabed;
 
+        if (_state != STATE.Generalize)
+        {
+            return;
+        }
+
         //Set Transform
         _targetPosition = pos;
         _targetLooker = pos + forward;
@@ -431,6 +465,11 @@ public class SWindow : MonoBehaviour
     {
         //Set Status
         _logic = LOGIC.Released;
+
+        if (_state != STATE.Generalize)
+        {
+            return;
+        }
 
         //Set Grouping Status
         if (_group != GROUP.Done)
@@ -600,7 +639,7 @@ public class SWindow : MonoBehaviour
         _memberID = id;
         _memberCount = count;
 
-        if(count > 1)
+        if (count > 1)
         {
             _memberRatio = ((float)_memberID / (float)(_memberCount - 1) - 0.5f) * (float)(_memberCount - 1) * 0.5f;
         }

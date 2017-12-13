@@ -27,6 +27,7 @@ public class SWindowGroup : SWindow
     private Vector3 _titleMinimalizedPosition;
     private Vector3 _titleDefaultPosition;
 
+    private float _titleHeight;
     protected override void Awake()
     {
         base.Awake();
@@ -53,7 +54,7 @@ public class SWindowGroup : SWindow
         _boxCollider.isTrigger = true;
         _boxCollider.enabled = false;
 
-        _boxColliderCenterReleased = new Vector3(0.0f, 0.4f, 0.0f);
+        _boxColliderCenterReleased = new Vector3(0.0f, 0.3f, 0.0f);
         _boxColliderSizeReleased = new Vector3(0.8f, 0.1f, 0.1f);
 
         _boxColliderCenterDraged = new Vector3(0.0f, 0.0f, 0.0f);
@@ -65,6 +66,7 @@ public class SWindowGroup : SWindow
         _boxCollider.center = _boxColliderCenterReleased;
         _boxCollider.size = _boxColliderSizeReleased;
 
+        _titleHeight = 0.3f;
         Ready();
     }
 
@@ -184,7 +186,7 @@ public class SWindowGroup : SWindow
     public void UnBinding()
     {
         //Setup Position & Scale for Default & Hovered When Generalized
-        _titleDefaultPosition = new Vector3(0.0f, 0.4f, 0.0f);
+        _titleDefaultPosition = new Vector3(0.0f, 0.3f, 0.0f);
         _titleDefaultScale = new Vector3(0.7f, 0.05f, 0.008f);
 
         _titleHoveredPosition = _titleDefaultPosition;
@@ -212,7 +214,6 @@ public class SWindowGroup : SWindow
     public override void Minimalize()
     {
         base.Minimalize();
-
         //make child scale zero.
     }
 
@@ -225,19 +226,21 @@ public class SWindowGroup : SWindow
     public override void DoGrouping(Transform parent)
     {
         base.DoGrouping(parent);
+        _titleHeight = 0.0f;
         Binding();
     }
 
     public override void UnGrouping()
     {
         base.UnGrouping();
+        _titleHeight = 0.3f;
         UnBinding();
     }   
 
     // 
     public override void OnClicked(Vector3 pos, Vector3 forward)
     {
-        pos.y -= 0.4f;
+        pos.y -= _titleHeight;
         base.OnClicked(pos, forward);
 
         //Fixed informations 
@@ -246,13 +249,13 @@ public class SWindowGroup : SWindow
 
     public override void OnDraged(Vector3 pos, Vector3 forward)
     {
-        pos.y -= 0.4f;
+        pos.y -= _titleHeight;
         base.OnDraged(pos, forward);
     }
 
     public override void OnReleased(Vector3 pos, Vector3 forward)
     {
-        pos.y -= 0.4f;
+        pos.y -= _titleHeight;
         base.OnReleased(pos, forward);
 
         //Fixed informations 
