@@ -17,7 +17,7 @@ public class SPointerLogic
     // Ray & hit checker
     private Ray _ray;
     private RaycastHit _hit;
-    private SWindow _obj;
+    private SWindowBase _obj;
 
     // Use this for initialization
     public SPointerLogic()
@@ -55,14 +55,14 @@ public class SPointerLogic
         {
             if (_obj != null)
             {
-                _obj.Blurring();
+                _obj.OnBlurred();
             }
             _obj = null;
         }
 
         if (_hit.collider != null)
         {
-            _obj = _hit.collider.GetComponent<SWindow>();
+            _obj = _hit.collider.GetComponent<SWindowBase>();
         }
 
         _position = _ray.origin + _ray.direction * _distance;
@@ -71,7 +71,7 @@ public class SPointerLogic
         {
             Vector3 pos = _obj.transform.position - _ray.origin;
             _maxDistance = pos.magnitude;
-            _obj.Focusing();
+            _obj.OnFocused();
         }
 
         Debug.DrawLine(_ray.origin, _position, Color.gray);
@@ -93,7 +93,7 @@ public class SPointerLogic
 
         if (_hit.collider != null)
         {
-            _obj = _hit.collider.GetComponent<SWindow>();
+            _obj = _hit.collider.GetComponent<SWindowBase>();
         }
 
         _position = _ray.origin + _ray.direction * _distance;
@@ -102,7 +102,7 @@ public class SPointerLogic
         {
             Vector3 pos = _obj.transform.position - _ray.origin;
             _maxDistance = pos.magnitude;
-            _obj.OnClicked(_position, -_ray.direction);
+            _obj.OnPressed(_position, -_ray.direction);
         }
 
         Debug.DrawLine(_ray.origin, _position, Color.magenta);
@@ -130,7 +130,7 @@ public class SPointerLogic
 
         if (_obj != null)
         {
-            _obj.OnDraged(_position, -_ray.direction);
+            _obj.OnDragged(_position, -_ray.direction);
         }
 
         Debug.DrawLine(_ray.origin, _position, Color.red);
@@ -156,7 +156,7 @@ public class SPointerLogic
         if (_obj != null)
         {
             _obj.OnReleased(_position, -_ray.direction);
-            _obj.Blurring();
+            _obj.OnBlurred();
             _obj = null;
         }
 

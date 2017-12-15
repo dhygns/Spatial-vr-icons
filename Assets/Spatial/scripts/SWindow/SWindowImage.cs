@@ -24,14 +24,14 @@ public class SWindowImage : SWindow
     }
 
     // 
-    public override void OnClicked(Vector3 pos, Vector3 forward)
+    public override void OnPressed(Vector3 pos, Vector3 forward)
     {
-        base.OnClicked(pos, forward);
+        base.OnPressed(pos, forward);
     }
 
-    public override void OnDraged(Vector3 pos, Vector3 forward)
+    public override void OnDragged(Vector3 pos, Vector3 forward)
     {
-        base.OnDraged(pos, forward);
+        base.OnDragged(pos, forward);
     }
 
     public override void OnReleased(Vector3 pos, Vector3 forward)

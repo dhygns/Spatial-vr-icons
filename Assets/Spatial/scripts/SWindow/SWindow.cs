@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class SWindow : MonoBehaviour
+public class SWindow : SWindowBase
 {
     //SWindow Status
     protected enum LOGIC
@@ -34,10 +34,12 @@ public class SWindow : MonoBehaviour
 
 
     //SWindow Grouping
+    protected GROUP _group;
+
     private int _memberCount, _memberID;
     private float _memberRatio = 0.0f;
     private float _memberRatioScale = 1.0f;
-    protected GROUP _group;
+    private float _groupingTilting = 0.0f;
 
     private SWindow _groupingCoord = null;
     private float _groupingTimer = 0.0f;
@@ -55,9 +57,6 @@ public class SWindow : MonoBehaviour
     //SWindow Logics
     protected LOGIC _logic;
     protected float _logicSpeed = 8.0f;
-
-    protected delegate void UpdateLogic();
-    protected UpdateLogic _updateLogic = null;
     protected UpdateLogic _updateGrouping = null;
 
     //SWindow scale
@@ -132,6 +131,7 @@ public class SWindow : MonoBehaviour
         _updateLogic += UpdateDefaultLogic;
 
         _updateGrouping = UpdateCheckingGrouping;
+        _groupingTilting = 0.0f;
 
         _currentScale = _targetScale = transform.localScale;
         _currentPosition = _targetPosition = transform.position;
@@ -142,12 +142,12 @@ public class SWindow : MonoBehaviour
         InitComponent<BoxCollider>(InitBoxCollider);
     }
 
-    protected virtual void Start()
+    protected new virtual void Start()
     {
 
     }
 
-    protected virtual void Update()
+    protected new virtual void Update()
     {
         Updates();
 
@@ -313,7 +313,7 @@ public class SWindow : MonoBehaviour
             }
             else
             {
-                if(_groupingCoord != _swTmp)
+                if (_groupingCoord != _swTmp)
                 {
                     _swTmp.Remove();
                     _swTmp = null;
@@ -351,6 +351,9 @@ public class SWindow : MonoBehaviour
 
         _updateLogic = null;
         _updateLogic += UpdateGroupingLogic;
+
+        _memberRatioScale = 0.2f;
+        _groupingTilting = 0.1f;
     }
 
     public virtual void UnGrouping()
@@ -368,22 +371,23 @@ public class SWindow : MonoBehaviour
         {
             _updateLogic += UpdateDefaultLogic;
         }
+
+        _memberRatioScale = 1.0f;
+        _groupingTilting = 0.0f;
     }
 
     /// <summary>
     /// 
-    /// (bottom up)
     /// </summary>
-    public virtual void Focusing()
+    public new void OnFocused()
     {
 
     }
 
     /// <summary>
     /// 
-    /// (bottom up)
     /// </summary>
-    public virtual void Blurring()
+    public new void OnBlurred()
     {
 
     }
@@ -414,7 +418,7 @@ public class SWindow : MonoBehaviour
         _iconBigTargetScale = Vector3.one * 5.0f;
     }
 
-    public virtual void OnClicked(Vector3 pos, Vector3 forward)
+    public new virtual void OnPressed(Vector3 pos, Vector3 forward)
     {
         //Set Status
         _logic = LOGIC.Clicked;
@@ -430,11 +434,12 @@ public class SWindow : MonoBehaviour
             _group = GROUP.Ready;
         }
 
+
         _currentPosition = transform.position;
         _targetPosition = pos;
 
-        _currentLooker = transform.position + transform.forward;
-        _targetLooker = pos + forward;
+        _currentLooker = transform.position + transform.forward + transform.right * _groupingTilting;
+        _targetLooker = pos + forward + transform.right * _groupingTilting;
 
         _updateLogic = null;
         _updateLogic += UpdateGrapedLogic;
@@ -445,7 +450,7 @@ public class SWindow : MonoBehaviour
 
     }
 
-    public virtual void OnDraged(Vector3 pos, Vector3 forward)
+    public new virtual void OnDragged(Vector3 pos, Vector3 forward)
     {
         //Set Status
         _logic = LOGIC.Grabed;
@@ -455,6 +460,7 @@ public class SWindow : MonoBehaviour
             return;
         }
 
+
         //Set Transform
         _targetPosition = pos;
         _targetLooker = pos + forward;
@@ -463,8 +469,9 @@ public class SWindow : MonoBehaviour
         Debug.DrawLine(_ray.origin, _ray.origin + _ray.direction, Color.cyan);
     }
 
-    public virtual void OnReleased(Vector3 pos, Vector3 forward)
+    public new virtual void OnReleased(Vector3 pos, Vector3 forward)
     {
+
         //Set Status
         _logic = LOGIC.Released;
 
@@ -481,7 +488,7 @@ public class SWindow : MonoBehaviour
 
         //Set Transform
         _targetPosition = pos;
-        _targetLooker = transform.position + transform.forward;
+        _targetLooker = transform.position + transform.forward + transform.right * _groupingTilting;
 
         //Clear CollidedWindows List
         _listCollidedSWindows.Clear();
@@ -501,6 +508,11 @@ public class SWindow : MonoBehaviour
         _boxCollider.size = _boxColliderSizeReleased;
         _boxCollider.center = _boxColliderCenterReleased;
         _boxCollider.isTrigger = false;
+    }
+
+    public new virtual void OnClicked(int ClickCount)
+    {
+
     }
 
     //Listeners
