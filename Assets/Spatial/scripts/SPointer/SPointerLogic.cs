@@ -17,7 +17,7 @@ public class SPointerLogic
     // Ray & hit checker
     private Ray _ray;
     private RaycastHit _hit;
-    private SWindowBase _obj;
+    private SBase _obj;
 
     // Use this for initialization
     public SPointerLogic()
@@ -62,7 +62,7 @@ public class SPointerLogic
 
         if (_hit.collider != null)
         {
-            _obj = _hit.collider.GetComponent<SWindowBase>();
+            _obj = _hit.collider.GetComponent<SBase>();
         }
 
         _position = _ray.origin + _ray.direction * _distance;
@@ -93,7 +93,7 @@ public class SPointerLogic
 
         if (_hit.collider != null)
         {
-            _obj = _hit.collider.GetComponent<SWindowBase>();
+            _obj = _hit.collider.GetComponent<SBase>();
         }
 
         _position = _ray.origin + _ray.direction * _distance;
