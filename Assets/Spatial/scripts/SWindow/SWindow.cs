@@ -100,6 +100,11 @@ public abstract class SWindow : SBase
         transform.localScale = CurrentScale;
         _listNearSWindow.ForEach((window) =>
         {
+            if(window == null)
+            {
+                _listNearSWindow.Remove(window);
+            }
+           
             Vector3 diff = window.transform.position - transform.position;
             if (diff.magnitude > 1.0f)
             {
