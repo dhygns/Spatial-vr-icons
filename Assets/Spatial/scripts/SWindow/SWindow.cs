@@ -241,6 +241,7 @@ public abstract class SWindow : SBase
                     if (_groupingCandidate is SGroup)
                     {
                         _group = _groupingCandidate as SGroup;
+                        _group.StartGroupingEffect();
                     }
                     else
                     {
@@ -249,6 +250,7 @@ public abstract class SWindow : SBase
                         Vector3 position = Vector3.Lerp(transform.position, _groupingCandidate.transform.position, 0.5f);
                         Quaternion rotation = Quaternion.Lerp(transform.rotation, _groupingCandidate.transform.rotation, 0.5f);
                         _group = Instantiate(_groupingPrefab, position, rotation, parent).GetComponent<SGroup>();
+                        _group.StartGroupingEffect();
                     }
                 }
             }

@@ -26,10 +26,15 @@ public class SGroup : SWindow
     //group children list
     private List<SWindow> __children;
 
+    //grouping effect object
+    private GameObject __groupingEffectPrefab;
+    private GameObject __groupingEffectObject;
+
     protected new void Awake()
     {
         base.Awake();
         __children = new List<SWindow>();
+        __groupingEffectPrefab = Resources.Load("Prefabs/GrouppingEffect") as GameObject;
 
         _groupState = GROUP.Ready;
         ActivateMode(LOGIC.None);
@@ -131,15 +136,35 @@ public class SGroup : SWindow
     {
         _groupState = GROUP.Normal;
         ActivateMode(LOGIC.Basic);
+        EndGroupingEffect();
 
         _collider.enabled = true;
+
     }
 
     public void Deativate()
     {
         _groupState = GROUP.Ready;
         _scaleDest = new Vector3(0.0f, 1.0f, 0.0f);
+        EndGroupingEffect();
+
         Destroy(gameObject, 1.0f);
+
+    }
+
+
+    public void StartGroupingEffect()
+    {
+        __groupingEffectObject = Instantiate(__groupingEffectPrefab, transform.position, transform.rotation, GameObject.Find("_Windows").transform) as GameObject;
+        __groupingEffectObject.GetComponent<GrouppingEffect>().Begin();
+    }
+
+    public void EndGroupingEffect()
+    {
+        if (__groupingEffectObject == null) return;
+
+        __groupingEffectObject.GetComponent<GrouppingEffect>().End();
+        __groupingEffectObject = null;
     }
 
     public void AddChild(SWindow child)
